@@ -2,8 +2,12 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>金融规则快速助手</title>
+  <title>金融规则知识助手</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 这里用 CDN 引入 React / ReactDOM / Babel，不用你安装任何东西 -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -12,525 +16,600 @@
       font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
     }
     body {
-      background: #0b1015;
-      color: #f5f5f5;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .app {
-      width: 100%;
-      max-width: 1100px;
-      background: #141a22;
-      border-radius: 20px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
-      padding: 24px 24px 28px;
-      display: flex;
-      gap: 24px;
-    }
-    @media (max-width: 900px) {
-      .app {
-        flex-direction: column;
-      }
-    }
-    .left, .right {
-      flex: 1;
-    }
-    .title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 20px;
-    }
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .badge {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      color: #9ca3af;
-    }
-    label {
-      font-size: 13px;
-      color: #d1d5db;
-      margin-bottom: 6px;
-      display: block;
-    }
-    select {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #374151;
-      background: #020617;
+      background-color: #020617;
       color: #e5e7eb;
-      font-size: 14px;
-      outline: none;
-      margin-bottom: 16px;
     }
-    select:focus {
-      border-color: #22c55e;
-      box-shadow: 0 0 0 1px rgba(34,197,94,0.4);
+    .app-root {
+      display: flex;
+      height: 100vh;
     }
-    .hint {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 18px;
-      line-height: 1.4;
+    .sidebar {
+      width: 260px;
+      border-right: 1px solid #1f2937;
+      padding: 16px 12px;
+      overflow-y: auto;
     }
-    button {
-      margin-top: 4px;
+    .sidebar-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .sidebar-item {
+      display: block;
       width: 100%;
+      text-align: left;
       padding: 10px 12px;
+      margin-bottom: 8px;
       border-radius: 10px;
       border: none;
-      font-size: 14px;
-      font-weight: 600;
       cursor: pointer;
-      background: linear-gradient(135deg,#22c55e,#4ade80);
-      color: #020617;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 13px;
     }
-    button:active {
-      transform: translateY(1px);
-      box-shadow: 0 0 0 rgba(0,0,0,0);
-      filter: brightness(0.96);
+    .sidebar-item.active {
+      background: #111827;
+      color: #22c55e;
     }
-    .right-card {
-      height: 100%;
-      border-radius: 16px;
-      background: radial-gradient(circle at top left,#1f2933,#020617);
-      border: 1px solid #1f2937;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .answer-tag {
-      font-size: 11px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-    .answer-title {
-      font-size: 16px;
+    .sidebar-item-name {
       font-weight: 600;
       margin-bottom: 4px;
     }
-    .answer-body {
-      font-size: 13px;
-      color: #e5e7eb;
-      line-height: 1.6;
-      white-space: pre-line;
-      flex: 1;
+    .sidebar-item-desc {
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.4;
     }
-    .answer-extra {
-      border-top: 1px dashed #374151;
-      padding-top: 8px;
-      margin-top: 4px;
+    .middle {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1f2937;
+    }
+    .dimension-bar {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1f2937;
+    }
+    .dimension-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .dimension-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .dimension-tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: transparent;
+      color: #d1d5db;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .dimension-tag.active {
+      background: #22c55e;
+      color: #020617;
+    }
+    .section-list {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1f2937;
+      flex-shrink: 0;
+    }
+    .section-list-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .section-empty {
       font-size: 12px;
       color: #9ca3af;
+    }
+    .section-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .section-tag {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .section-tag.active {
+      background: #0f172a;
+      color: #22c55e;
+    }
+    .content {
+      width: 480px;
+      padding: 16px 18px;
+      overflow-y: auto;
+    }
+    .content-breadcrumb {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    .content-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #f9fafb;
+    }
+    .content-tags {
+      margin-bottom: 8px;
+    }
+    .content-tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      color: #9ca3af;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+    .content-summary {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 10px;
       line-height: 1.5;
     }
-    .placeholder {
+    .content-body {
+      white-space: pre-wrap;
       font-size: 13px;
-      color: #6b7280;
-      line-height: 1.6;
-      margin-top: 8px;
+      line-height: 1.7;
+      color: #e5e7eb;
+    }
+    .content-placeholder {
+      font-size: 13px;
+      color: #9ca3af;
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="left">
-      <div class="title">金融规则快速助手</div>
-      <div class="subtitle">给新手看的简易工具 通过选择产品和问题 一步步找到要用的话术和解释</div>
+  <div id="root"></div>
 
-      <div class="badge-row">
-        <div class="badge">简单赚币</div>
-        <div class="badge">自动赚币</div>
-        <div class="badge">双币赢</div>
-        <div class="badge">活期借币</div>
-        <div class="badge">闪赚</div>
-      </div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
 
-      <label for="productSelect">第一步 选择产品或大类</label>
-      <select id="productSelect">
-        <option value="">请选择</option>
-        <option value="simple_flex">简单赚币 活期</option>
-        <option value="simple_fixed">简单赚币 定期</option>
-        <option value="auto_earn">自动赚币</option>
-        <option value="btc_saving">BTC 屯币生息宝</option>
-        <option value="onchain">链上赚币</option>
-        <option value="eth_stake">ETH 质押 BETH</option>
-        <option value="sol_stake">SOL 质押 OKSOL</option>
-        <option value="dual_invest">双币赢 高卖 低买</option>
-        <option value="auto_roll">双币赢 自动续投</option>
-        <option value="lending">活期借币</option>
-        <option value="flash_earn">闪赚</option>
-        <option value="tips">通用技巧 路径</option>
-      </select>
-
-      <label for="questionSelect">第二步 选择用户问的问题</label>
-      <select id="questionSelect">
-        <option value="">请先选择上面的大类</option>
-      </select>
-
-      <div class="hint">
-        小提示  
-        - 可以先按用户问题选大方向 再选具体问题  
-        - 如果找不到完全一样的提问 先选最接近的 再自己加一点补充说明
-      </div>
-
-      <button id="getAnswerBtn">获取答案</button>
-    </div>
-
-    <div class="right">
-      <div class="right-card">
-        <div class="answer-tag">回答区域</div>
-        <div id="answerTitle" class="answer-title">这里会显示你要说的话</div>
-        <div id="answerBody" class="answer-body">
-          先在左边选择产品和问题  
-          例如 用户问 活期简单赚币是不是保本  
-          就可以选  
-          产品  简单赚币 活期  
-          问题  是否保本和风险点  
-          
-          右侧会自动生成一段可以直接对用户说的话
-        </div>
-        <div id="answerExtra" class="answer-extra">
-          旁边的内容只是一份参考话术 可以根据用户实际情况再删减或补充  
-          如果用户是 VIP 可以顺带安抚一下情绪 强调平台有风控和风险准备金
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // 产品和问题数据
-    const qaData = {
-      simple_flex: {
-        name: "简单赚币 活期",
-        questions: [
-          {
-            id: "what",
-            q: "这个产品大概是什么机制",
-            a: "活期简单赚币类似以前的余币宝 用户把闲置币存进去 平台会撮合出借给有借币需求的用户 出借成功后按市场借币利率计算利息.\n\n可以理解为 把币短期借给别的用户用 自己拿利息 中间的撮合和风控由平台负责."
-          },
-          {
-            id: "safe",
-            q: "是否保本和风险点有哪些",
-            a: "活期简单赚币是低风险理财 产品目标是尽量保障本金安全 但从规则上不承诺绝对保本.\n\n资金会借给有借币需求的用户 如果发生极端行情 借币方仓位被强平后保证金不足 同时平台的风险准备金也不够覆盖 理论上可能出现本金无法完全收回的情况.\n\n目前历史上还没有出现过这种情况 平台也预留了出借利息的 15% 作为风险准备金 并配合严格风控控制风险 可以把它当成偏稳健的产品 但不能当成银行存款."
-          },
-          {
-            id: "apr_calc",
-            q: "收益怎么计算和发放",
-            a: "基础公式\n每小时收益 = 出借金额 × 当前出借年化 ÷ 365 ÷ 24 × 85%\n这里 85% 是扣除 15% 风险准备金后的实际到账部分.\n\n例如 用户出借 5000 USDT 年化 3%\n每小时收益 = 5000 × 3% ÷ 365 ÷ 24 × 85% 约等于 0.0145 USDT.\n\n资金在整点 T 被成功出借后 从 T 到 T+1 这一小时的利息 会在 T+1 时发放到赚币页面中."
-          },
-          {
-            id: "why_not_lent",
-            q: "为什么我把最低年化设成 1% 还是一直没借出去",
-            a: "现在活期简单赚币的逻辑是 只要你设定的最低出借年化 不高于市场借币年化 资金就有资格参与收益分配 但是否被单独撮合 完全看市场需求.\n\n如果阶段性借币需求比较少 出借的资金比借入方多 很可能出现长时间待出借甚至完全没有收益的情况.\n\n可以温和地和用户说明\n目前市场上借币的人相对较少 出借的人比较多 所以匹配会慢一些 不是系统出问题 而是供需关系导致的 只要年化设置不高于市场借币年化 一旦有需求就会自动参与收益分配."
-          },
-          {
-            id: "redeem",
-            q: "赎回规则和到账时间",
-            a: "活期简单赚币支持随时赎回 无论资金是否已经出借 赎回后一般会实时到账.\n\n在极少数情况 如果某个币种的资金池已经全部借出 系统可能临时限制赎回 比如限额或短暂暂停 并按小时复核资金情况 只要资金陆续归还 就会自动恢复正常赎回."
-          }
-        ]
-      },
-      simple_fixed: {
-        name: "简单赚币 定期",
-        questions: [
-          {
-            id: "what",
-            q: "定期和活期有什么核心区别",
-            a: "定期简单赚币目前主要支持 USDT 90 天期.\n用户按页面展示的固定年化和固定期限申购 资金会去匹配借贷需求 匹配成功后开始计息.\n\n和活期相比\n- 年化在申购时写死 不随市场波动\n- 锁定期内无法自由赎回 只能等到期或遇到借款方提前还款 逾期等情况\n- 收益稳定 但同样要承担借款方违约和市场波动风险."
-          },
-          {
-            id: "redeem",
-            q: "能不能提前赎回",
-            a: "定期简单赚币原则上不支持提前赎回.\n只有在资金还处于待出借状态 也就是还没有真正借出去之前 才能选择提前赎回.\n一旦已经起息 需要等到期或出现借款方提前还款等特殊情况才能收回本金和利息."
-          }
-        ]
-      },
-      auto_earn: {
-        name: "自动赚币",
-        questions: [
-          {
-            id: "fund_acc",
-            q: "资金账户自动赚币怎么工作",
-            a: "用户在资金账户开启自动赚币后 如果过去 24 小时这个币种没有新增余额操作 比如充币 赎回 买币 奖励发放等 系统会自动把这部分闲置资产申购到对应的活期赚币产品 让资金自动生息.\n\n适合不想频繁手动申购 但又希望闲置资金有利息的用户."
-          },
-          {
-            id: "trade_acc",
-            q: "交易账户自动赚币规则",
-            a: "交易账户自动赚币目前主要面向 VIP 用户.\n开启后 交易账户中的正权益资产会自动参与出借赚取利息 同时这些资产仍然可以作为合约保证金或借贷质押使用 不影响正常交易.\n\n开启后的 24 小时内不能关闭 期间用于赚币的金额不能转出或提币 主账户和子账户共享总额度 按开启时间顺序分配额度."
-          },
-          {
-            id: "priority",
-            q: "和简单赚币哪个优先",
-            a: "当用户同时开启简单赚币和自动赚币时 简单赚币优先占用额度 剩余的闲置资金才会进入自动赚币.\n可以给用户一句总结\n如果已经手动把一部分资金放到简单赚币 自动赚币只会帮你用好剩下的那一部分闲置资金 不会互相抢额度."
-          }
-        ]
-      },
-      btc_saving: {
-        name: "BTC 屯币生息宝",
-        questions: [
-          {
-            id: "diff",
-            q: "和简单赚币有什么区别",
-            a: "BTC 屯币生息宝是 VIP 专属的保本理财产品 收益来源是平台做的低风险中性套利策略.\n\n简单赚币是把资金借给有借币需求的用户 赚借币利息.\n屯币宝是平台帮你做套利策略.\n最关键一点 BTC 屯币生息宝是保本但不保收益 年化会随策略表现波动."
-          },
-          {
-            id: "redeem",
-            q: "赎回规则和额度",
-            a: "如果平台的即时赎回额度充足 用户每天可以即时赎回最多 10 BTC 即时赎回一般是秒到账.\n超过即时额度的部分会走常规赎回 流程会在 7 天内处理完成.\n\n可以提醒用户\n大额赎回建议提前规划 比如分天赎回 或避开活动高峰."
-          }
-        ]
-      },
-      onchain: {
-        name: "链上赚币",
-        questions: [
-          {
-            id: "what",
-            q: "大致机制和优势",
-            a: "链上赚币是平台帮用户接入精选的链上质押和 DeFi 协议 用户把币通过平台参与质押或流动性挖矿 获得链上奖励.\n平台会对接入协议做审查 包括审计 情况 团队背景等 目标是尽量筛出相对安全稳定的项目 年化展示已经扣除服务费和链上网络费."
-          },
-          {
-            id: "risk",
-            q: "主要风险点有哪些",
-            a: "链上赚币本质上还是参与第三方 DeFi 协议.\n如果协议本身出现合约漏洞 被黑客攻击 项目方停止运营或破产 发生异常停牌等 极端情况 可能导致资产损失 这些风险不在平台完全可控范围内.\n\n可以向用户说明\n平台负责展示项目和分配收益 但无法对第三方项目的所有风险兜底 投资前可以适当分散仓位 不要把全部资产只放在单一链上项目中."
-          },
-          {
-            id: "redeem",
-            q: "赎回期和费用怎么看",
-            a: "不同链上产品的起投金额 赎回时间和服务费都不一样 以当时产品页面为准.\n赎回实际到账时间会受到链上网络确认速度影响 不是完全由平台控制.\n\n可以引导用户\n在申购前先点进具体产品页面 看参考年化 起投金额 赎回期 和是否有锁定期."
-          }
-        ]
-      },
-      eth_stake: {
-        name: "ETH 质押 BETH",
-        questions: [
-          {
-            id: "what",
-            q: "BETH 是什么 有什么用",
-            a: "用户在平台质押 ETH 后 会收到等值的 BETH 记在资金账户.\nBETH 可以用于现货交易 作为杠杆或借币质押物 也可以参与相关活动 本质上代表你在平台的质押份额.\n\n当前 BETH 不能直接链上提币 但只要在你账户里 不论在哪个账户 质押奖励都会按照持仓快照继续发放."
-          },
-          {
-            id: "yield",
-            q: "收益如何计算和发放",
-            a: "BETH 奖励计算公式\nBETH 奖励 = 每小时 BETH 持有量 × 每日年化 ÷ 365.\n系统会按小时快照持仓 每天大约在 11:00 把前一天累计的奖励发到资金账户.\n\n页面展示的年化已经扣除了平台收取的 5% 服务费 里面包含网络费用."
-          },
-          {
-            id: "risk",
-            q: "会不会亏损",
-            a: "从 ETH 数量角度看 质押可以保证本金数量不变 还会增加质押奖励.\n但如果用 USDT 价值来衡量 总资产会受到 ETH 价格波动影响.\n\n可以提醒用户\n质押只能保证币的数量 不保证法币价值 不适合完全不想承担币价波动的人."
-          }
-        ]
-      },
-      sol_stake: {
-        name: "SOL 质押 OKSOL",
-        questions: [
-          {
-            id: "what",
-            q: "OKSOL 是什么 有什么用",
-            a: "用户在平台质押 SOL 后 会按 1 比 1 收到 OKSOL.\n持有 OKSOL 既能持续获得 SOL 原生质押奖励和 MEV 奖励 又能保持资产的流动性.\n\nOKSOL 可以拿来做现货交易 做保证金或借贷质押 也可以参与活动 当前不支持直接提币."
-          },
-          {
-            id: "yield",
-            q: "奖励如何计算和发放",
-            a: "平台会按小时快照 OKSOL 持仓.\n奖励公式大致为\n每小时奖励 = OKSOL 持有量 × 年化收益率 ÷ 365 ÷ 24.\n实际发放节奏是每两天把累计奖励打到资金账户.\n\n展示的年化已经扣除了 1% 服务费."
-          }
-        ]
-      },
-      dual_invest: {
-        name: "双币赢 高卖 低买",
-        questions: [
-          {
-            id: "high_sell",
-            q: "高卖策略怎么结算",
-            a: "用户用 BTC 申购高卖 BTC 产品 设定一个目标价.\n到期价 小于 目标价\n本金和收益都用原来的 BTC 结算 相当于拿利息但没有卖出 BTC.\n到期价 大于等于 目标价\n本金会按目标价换成 USDT 再加上收益 相当于在目标价附近把 BTC 卖出.\n\n到期价通常指产品到期日 15:00 到 16:00 之间 BTC 指数的平均价格."
-          },
-          {
-            id: "low_buy",
-            q: "低买策略怎么结算",
-            a: "用户用 USDT 申购低买 BTC 产品 设定一个目标买入价.\n到期价 大于 目标价\n本金和收益都用 USDT 结算 等于没有买到 BTC 但是赚了一点利息.\n到期价 小于等于 目标价\n本金按目标价换成 BTC 再加上收益 相当于在目标价附近买入 BTC.\n\n适合本来就想挂买单的用户 通过结构化产品顺便拿额外利息."
-          },
-          {
-            id: "redeem",
-            q: "能不能提前赎回 会不会亏",
-            a: "除了 ETH/BTC 这一类特殊币对外 绝大部分双币赢产品支持在起息后到到期前一个小时之间申请提前赎回.\n\n提前赎回时 系统会给出一个实时报价 如果此时标的价格对你不利 赎回得到的金额可能低于最初本金 需要向用户强调 提前赎回不是原价退出 有可能会亏损 只有确认接受当前报价再操作."
-          },
-          {
-            id: "settle",
-            q: "到期后资金多久回到账户",
-            a: "正常情况下 双币赢到期会在当日 16:30 左右完成结算 本金和收益会直接打回资金账户.\n结算过程如果遇到系统处理 等等技术因素 可能会略有延迟 一般不会超过 24 小时."
-          },
-          {
-            id: "risk",
-            q: "主要风险点怎么说",
-            a: "双币赢最大的风险是到期时结算币种和价格不确定.\n高卖可能在强势上涨时被强制卖出 BTC 未来继续涨就会有踏空风险.\n低买可能在单边下跌时被强制买入 BTC 后面价格继续跌 币本位会亏损.\n\n适合 用户本来就愿意在某个价格附近买入或卖出 同时愿意用时间换一点额外利息 的场景."
-          }
-        ]
-      },
-      auto_roll: {
-        name: "双币赢 自动续投",
-        questions: [
-          {
-            id: "basic",
-            q: "基础自动续投怎么解释",
-            a: "基础自动续投的逻辑是\n如果到期时市场价格没有触碰到目标价 系统会把本金和收益自动续投到一笔新订单.\n新订单的目标价保持不变 继续使用原来的挂单价 直到某一次到期时触发目标价 完成买入或卖出.\n\n这样适合坚定看某个价格位的用户 省去反复手动申购的动作."
-          },
-          {
-            id: "pro",
-            q: "进阶自动续投有什么不同",
-            a: "进阶自动续投会根据到期日的市场价 自动调整下一单的目标价.\n低买场景下 新订单的目标价会低于到期日市场价\n高卖场景下 新订单的目标价会高于到期日市场价\n并且价格差不低于用户设置的价差比例.\n\n系统还会根据这个价差帮你推荐一个续投期限 但会设置一个最长期限 如果在这个时间范围内都没有合适的产品 自动续投就会失败 资金正常回到账户."
-          }
-        ]
-      },
-      lending: {
-        name: "活期借币",
-        questions: [
-          {
-            id: "what",
-            q: "活期借币的核心规则",
-            a: "活期借币允许用户在不卖币的前提下 通过抵押其他资产来借出所需币种.\n借款人可以在产品页面看到实时利率 可用质押物 可借额度等信息.\n\n借款是按小时计息 利息是复利模式 每小时利息 = (借款本金 + 已产生利息) × 当前小时利率."
-          },
-          {
-            id: "repay",
-            q: "有没有固定还款日 怎么还款",
-            a: "活期借币没有固定到期日 用户可以随时归还本金和利息.\n目前已经支持直接用质押物进行还款 不一定要提前把借到的币换回去.\n\n到期前只要保持保证金充足 不触发强平 就可以一直借着."
-          },
-          {
-            id: "limit",
-            q: "借币额度和质押率怎么说",
-            a: "可借额度和用户等级 质押币种 折扣率 以及整体资金池情况有关.\n不同币种的质押率不同 质押率越高 同样价值下可借额度越大.\n\n遇到用户问得很细时 可以帮查官方表格里的借币限额和折扣率 再结合说明."
-          }
-        ]
-      },
-      flash_earn: {
-        name: "闪赚",
-        questions: [
-          {
-            id: "diff",
-            q: "闪赚和简单赚币有什么关系",
-            a: "闪赚可以理解成 简单赚币 + 新币空投 两部分收益.\n资金一方面会参与简单赚币出借 拿利息 另一方面可以根据活动规则拿到新上线代币的空投.\n\n子账户和部分机构账户不支持参加 详情以活动页面为准."
-          },
-          {
-            id: "safe",
-            q: "是否保本 和收益不确定性",
-            a: "闪赚里的新币空投部分设计为保本理财 不会动用本金.\n利息部分来自简单赚币出借 简单赚币本身属于低风险但不承诺绝对保本.\n\n整体可以向用户解释为\n本金目标是尽量保障 但收益不是固定的 年化会随市场借币情况和活动规则变化."
-          },
-          {
-            id: "redeem",
-            q: "提前赎回会不会影响奖励",
-            a: "闪赚的奖励按小时计算 但不会实时发放.\n如果用户在某个小时中途赎回 那一小时内的资金既不会再计息 也不会计入空投奖励.\n\n活动结束后如果用户没有主动赎回 USDT 部分会自动转入简单赚币 BTC 和 OKB 会在两小时内自动赎回到资金账户."
-          },
-          {
-            id: "reward",
-            q: "奖励什么时候发放 去哪里看",
-            a: "出借成功后的第二个小时开始计算简单赚币利息和新币空投奖励.\n每小时产生的奖励会在下一个小时统一发到资金账户.\n\n用户可以在 资产 赚币 中手动领取 也可以在闪赚订单详情里查看已到账奖励.\n如果活动结束前没有领取 一般会在活动结束后数小时内自动发放."
-          }
-        ]
-      },
-      tips: {
-        name: "通用技巧 路径",
-        questions: [
-          {
-            id: "path",
-            q: "如何快速教用户找到产品入口",
-            a: "通用说法可以这样\n如果用户在 App\n右下角点 资产 或 探索 然后根据产品不同选择 简单赚币 双币赢 链上赚币 借贷 等入口.\n如果用户在网页\n顶部菜单一般在 金融 或 赚币 里面 找到对应产品名字即可.\n\n可以根据对方说的设备 再加一句具体路径 例如\nApp 右下角 资产 赚币 按币种查看订单详情."
-          },
-          {
-            id: "no_yield",
-            q: "遇到用户说没有收益 怎么排查",
-            a: "可以按三个方向一步步问\n- 资金到底有没有成功出借 或还在待出借\n- 产品本身是不是在赎回中 或已经到期停止计息\n- 市场阶段性借入需求是不是比较弱.\n\n话术上可以先共情 再解释\n目前简单赚币的年化显示的是只要成功出借后可以拿到的大致收益 但前提是要有人来借币 如果这一段时间借币的人少 出借的排队会比较久."
-          },
-          {
-            id: "no_yield_redeem",
-            q: "赎回中是否还有收益",
-            a: "可以统一说明\n不论是简单赚币 链上赚币 还是其他理财产品 一旦状态显示赎回中 一般都不再产生新收益.\n\n赎回中的时间长短 取决于产品规则和对手方资金回笼速度 如果比较着急用钱 可以提前在申购前确认赎回规则."
-          }
-        ]
-      }
+    const SECTION_LABELS = {
+      overview: "产品定位与定义",
+      mechanism: "运作机制",
+      yield: "收益结构",
+      interest: "计息规则",
+      redeem: "赎回规则",
+      risk: "风险披露",
+      scenario: "典型场景",
+      formula: "公式与示例",
+      faq: "常见问题"
     };
 
-    const productSelect = document.getElementById("productSelect");
-    const questionSelect = document.getElementById("questionSelect");
-    const answerTitle = document.getElementById("answerTitle");
-    const answerBody = document.getElementById("answerBody");
-    const answerExtra = document.getElementById("answerExtra");
-    const getAnswerBtn = document.getElementById("getAnswerBtn");
-
-    function refreshQuestions() {
-      const productId = productSelect.value;
-      questionSelect.innerHTML = "";
-      if (!productId || !qaData[productId]) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "请先选择上面的大类";
-        questionSelect.appendChild(opt);
-        return;
+    const products = [
+      {
+        id: "simple_earn_flex",
+        name: "简单赚币（活期）",
+        category: "赚币产品",
+        description:
+          "把用户的闲置资金集中到出借资金池，平台撮合给有借币需求的用户，用借币利息为出借人创造收益。",
+        tags: ["低风险理财", "按小时计息", "可随时赎回", "风险准备金 15%"],
+        sections: [
+          {
+            id: "simple_earn_flex_overview",
+            type: "overview",
+            title: "产品定位与适用人群",
+            content: [
+              "简单赚币（活期）是平台的基础型“借贷撮合类”理财产品。",
+              "",
+              "核心定位：",
+              "1. 帮助用户把闲置币种出借给有借币需求的交易者，赚取借币利息；",
+              "2. 在不需要用户主动选对手方、风控模型的前提下，由平台统一撮合与风险管理；",
+              "3. 风险等级低于主动交易，高于“单纯持币不动”。",
+              "",
+              "适用人群：",
+              "- 有中短期闲置资金，希望获取额外收益；",
+              "- 对交易不熟悉，但愿意承担一定市场与对手方风险；",
+              "- 不追求精确择时，只希望“闲钱别躺着”。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_mechanism",
+            type: "mechanism",
+            title: "运作机制与资金流向",
+            content: [
+              "1. 资金来源：",
+              "   - 用户在简单赚币页面选择币种与金额，提交“出借委托”；",
+              "   - 资金从资金账户或交易账户划入出借池。",
+              "",
+              "2. 资金流向：",
+              "   - 平台将出借池资金按需撮合给有借币需求的用户（包括合约交易、杠杆交易等场景）；",
+              "   - 借币用户按照“借币年化利率”支付利息；",
+              "   - 平台从利息中提取固定比例作为风险准备金，其余按比例分配给出借人。",
+              "",
+              "3. 风险准备金机制：",
+              "   - 平台会从借币利息中提取约 15% 作为风险准备金；",
+              "   - 用于覆盖极端行情下，借币方保证金不足时的潜在损失；",
+              "   - 出借用户实际到手为“借币利息 × 85% 左右”。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_yield",
+            type: "yield",
+            title: "收益结构与年化含义",
+            content: [
+              "1. 收益来源：",
+              "   - 纯粹来自借币用户支付的利息，不包含做市、衍生品等额外风险敞口；",
+              "   - 不同币种的借币需求不同，导致年化差异较大。",
+              "",
+              "2. 年化收益展示：",
+              "   - 页面展示的“参考年化”属于滚动历史数据或当前时刻的折算值；",
+              "   - 不是承诺收益，未来实际收益可能高于或低于参考值；",
+              "   - 对于稳定币出借，平台会将所有合格出借订单聚合，按统一年化进行收益分配。",
+              "",
+              "3. 收益拆分：",
+              "   - 用户看到的到手收益 = 借币利息 × (1 - 风险准备金比例)；",
+              "   - 风险准备金比例目前约为 15%，实际以产品规则为准。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_interest",
+            type: "interest",
+            title: "计息规则与边界条件",
+            content: [
+              "1. 计息起点：",
+              "   - 只有当资金被成功出借（状态为“赚币中”）后，才开始计息；",
+              "   - “待出借”状态不计息。",
+              "",
+              "2. 计息方式：",
+              "   - 以小时为单位进行收益计算；",
+              "   - 每个计息小时，系统会截取该小时内的出借余额与对应年化。",
+              "",
+              "3. 通用计息公式（示意）：",
+              "   - 每小时收益 = 出借余额 × 实际年化 / 365 / 24 × (1 - 风险准备金比例)；",
+              "   - 其中风险准备金比例目前约为 15%。",
+              "",
+              "4. 计息终止：",
+              "   - 用户发起赎回申请并进入“赎回中”状态后，通常不再产生新收益；",
+              "   - 实际到账时间受资金池流动性影响，在极端行情下可能略有延迟。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_redeem",
+            type: "redeem",
+            title: "赎回规则与流动性约束",
+            content: [
+              "1. 正常赎回：",
+              "   - 绝大多数时间，用户可以随时提交赎回申请；",
+              "   - 资金会在短时间内回到账户，具体时效视币种与资金池情况而定。",
+              "",
+              "2. 流动性约束：",
+              "   - 当某一币种的出借资金大部分已经被借出，而借币方尚未归还时，赎回可能受到限制；",
+              "   - 平台可能采取“限额赎回”、“分批赎回”等措施，以保障总体资金安全与可持续性。",
+              "",
+              "3. 极端情形：",
+              "   - 极端行情下，如大量借币用户同时爆仓、资金池出现阶段性缺口，赎回时效可能明显延长；",
+              "   - 此类情况通常会通过公告、帮助中心、弹窗提示等方式提前或同步说明。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_risk",
+            type: "risk",
+            title: "风险披露与适当性提示",
+            content: [
+              "简单赚币（活期）虽为相对稳健产品，但仍然存在以下风险：",
+              "",
+              "1. 对手方风险：",
+              "   - 借币用户在极端行情下可能出现保证金不足、清算不及时等情况；",
+              "   - 风险准备金无法完全覆盖时，极端情况下可能对出借本金产生影响。",
+              "",
+              "2. 流动性风险：",
+              "   - 市场某一币种借币需求突然大幅上升时，资金会高度“闲置利用”，导致赎回速度下降；",
+              "   - 反之，借币需求不足时，出借资金可能长时间处于“待出借”状态，收益趋近于 0。",
+              "",
+              "3. 市场利率风险：",
+              "   - 借币年化受市场供需影响，可能快速上升或下降；",
+              "   - 历史年化不代表未来表现。",
+              "",
+              "4. 使用建议：",
+              "   - 不建议将全部资产集中在单一币种或单一产品；",
+              "   - 对风险极度厌恶、完全不接受本金波动的用户，应充分了解上述风险后再决定是否参与。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_scenario",
+            type: "scenario",
+            title: "典型用户问题与专业解读",
+            content: [
+              "场景 1：用户反馈“收益突然变 0”",
+              "",
+              "专业解读：",
+              "- 检查资金是否仍处于“赚币中”状态；",
+              "- 若状态为“待出借”，说明近期借币需求不足，资金尚未再次被撮合；",
+              "- 若状态为“赎回中”，则已经不再产生收益，只等待资金回到账户。",
+              "",
+              "场景 2：用户质疑“设置了 1% 年化却长时间借不出去”",
+              "",
+              "专业解读：",
+              "- 实际是否出借，取决于市场借币需求与资金池整体供需，而非单个用户设置的下限；",
+              "- 即便设置的最低年化较低，当总体出借资金远大于借币需求时，也会出现排队与长时间待出借的情况；",
+              "- 可以引导用户结合历史借币数据、市场行情综合判断，不宜单纯以“设了 1% 就一定秒出借”来理解。"
+            ].join("\\n")
+          },
+          {
+            id: "simple_earn_flex_formula",
+            type: "formula",
+            title: "收益计算示例（带入实际数字）",
+            content: [
+              "【示例参数】",
+              "- 出借金额：5,000 USDT；",
+              "- 市场借币年化：3.8%；",
+              "- 风险准备金比例：15%；",
+              "- 当日有 20 小时处于“赚币中”状态，剩余时间为“待出借”。",
+              "",
+              "1. 每小时理论收益：",
+              "   每小时收益 = 5,000 × 3.8% / 365 / 24 × 0.85",
+              "                 ≈ 0.0202 USDT/小时。",
+              "",
+              "2. 当日实际收益：",
+              "   当日收益 ≈ 0.0202 × 20 ≈ 0.404 USDT。",
+              "",
+              "3. 关键观察点：",
+              "- 有效计息小时数是决定实际收益的关键；",
+              "- 市场越活跃、借币需求越足，出借资金“空仓时间”越少，总收益越接近“年化 × 本金”的理论值。"
+            ].join("\\n")
+          }
+        ]
+      },
+      {
+        id: "simple_earn_fixed",
+        name: "简单赚币（定期）",
+        category: "赚币产品",
+        description:
+          "目前主要为 USDT 90 天期，采用固定年化与锁定期模式，匹配借贷需求后开始计息。",
+        tags: ["USDT 90 天", "固定年化", "不可随意赎回"],
+        sections: [
+          {
+            id: "simple_earn_fixed_overview",
+            type: "overview",
+            title: "产品定位与与活期的差异",
+            content:
+              "简单赚币（定期）以锁定期限换取更稳定的参考年化。与活期相比，资金流动性更差，但收益可预期性更好，适合对流动性要求不高的用户。"
+          },
+          {
+            id: "simple_earn_fixed_risk",
+            type: "risk",
+            title: "锁定与提前赎回风险提示",
+            content:
+              "锁定期内原则上不支持赎回，仅在资金仍未出借的阶段可以取消。匹配成功后，需承担锁定期内的市场利率变化与借款方相关风险。"
+          }
+        ]
+      },
+      {
+        id: "dual_invest",
+        name: "双币赢（高卖 / 低买）",
+        category: "结构化产品",
+        description:
+          "将“挂单买卖 + 收益增强”组合在一起的结构化产品，通过设定目标价与期限，在到期时根据标的价格决定结算币种与收益。",
+        tags: ["结构化", "高卖策略", "低买策略", "到期结算"],
+        sections: [
+          {
+            id: "dual_invest_overview",
+            type: "overview",
+            title: "产品定位与适用策略",
+            content:
+              "双币赢适合“本来就想在某个价位买入或卖出”的用户，通过结构化设计，在等待成交的过程中额外获得收益，而不是单纯挂限价单。"
+          },
+          {
+            id: "dual_invest_mechanism",
+            type: "mechanism",
+            title: "高卖 / 低买的结算逻辑",
+            content:
+              "高卖：用标的币申购，到期价格≥目标价则按目标价卖出换成计价币，否则继续持有标的币并获得收益。\\n低买：用计价币申购，到期价格≤目标价则按目标价买入标的币，否则继续持有计价币并获得收益。"
+          },
+          {
+            id: "dual_invest_risk",
+            type: "risk",
+            title: "价格偏离风险与机会成本",
+            content:
+              "主要风险不在于“产品是否安全”，而在于到期时标的价格是否显著偏离目标价。如果高卖后价格继续大涨，或低买后价格继续大跌，都会产生明显的机会成本或浮动亏损。"
+          }
+        ]
+      },
+      {
+        id: "lending",
+        name: "活期借币",
+        category: "借币与杠杆",
+        description:
+          "以质押物为基础，按小时计息灵活借入目标币种，可用于杠杆交易、合约交易或短期资金需求。",
+        tags: ["按小时计息", "可随时归还", "支持质押物还款"],
+        sections: [
+          {
+            id: "lending_overview",
+            type: "overview",
+            title: "借币产品整体介绍",
+            content:
+              "活期借币允许用户在不卖出现有资产的前提下，通过质押其他币种换取流动性，按小时计息，无固定到期日，可随时归还。"
+          },
+          {
+            id: "lending_interest",
+            type: "interest",
+            title: "复利计息与利率来源",
+            content:
+              "采用小时复利计息模式：每小时利息会并入本金，下一小时以新的余额为基数计息。利率由市场供需、风险水平、币种特性等因素决定。"
+          },
+          {
+            id: "lending_risk",
+            type: "risk",
+            title: "质押品波动与强平风险",
+            content:
+              "质押物价值若因市场波动大幅下降，可能触及保证金维护比例，触发强平或部分资产被动平仓。用户应持续关注质押率与风险提示。"
+          }
+        ]
       }
-      const firstOpt = document.createElement("option");
-      firstOpt.value = "";
-      firstOpt.textContent = "请选择问题";
-      questionSelect.appendChild(firstOpt);
+    ];
 
-      qaData[productId].questions.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.id;
-        opt.textContent = item.q;
-        questionSelect.appendChild(opt);
-      });
+    function FinancialRulesApp() {
+      const [selectedProductId, setSelectedProductId] = useState(
+        products[0] ? products[0].id : ""
+      );
+      const [selectedSectionType, setSelectedSectionType] = useState("overview");
+      const [selectedSectionId, setSelectedSectionId] = useState(null);
+
+      const selectedProduct = useMemo(
+        () => products.find((p) => p.id === selectedProductId),
+        [selectedProductId]
+      );
+
+      const availableSectionTypes = useMemo(() => {
+        if (!selectedProduct) return [];
+        const set = new Set();
+        selectedProduct.sections.forEach((s) => set.add(s.type));
+        return Array.from(set);
+      }, [selectedProduct]);
+
+      const sectionsOfSelectedType = useMemo(() => {
+        if (!selectedProduct) return [];
+        return selectedProduct.sections.filter(
+          (s) => s.type === selectedSectionType
+        );
+      }, [selectedProduct, selectedSectionType]);
+
+      const activeSection = useMemo(() => {
+        if (!sectionsOfSelectedType.length) return null;
+        if (selectedSectionId) {
+          const found = sectionsOfSelectedType.find(
+            (s) => s.id === selectedSectionId
+          );
+          if (found) return found;
+        }
+        return sectionsOfSelectedType[0];
+      }, [sectionsOfSelectedType, selectedSectionId]);
+
+      const handleSelectProduct = (id) => {
+        setSelectedProductId(id);
+        const prod = products.find((p) => p.id === id);
+        if (prod && prod.sections.length > 0) {
+          setSelectedSectionType(prod.sections[0].type);
+        } else {
+          setSelectedSectionType("overview");
+        }
+        setSelectedSectionId(null);
+      };
+
+      return (
+        <div className="app-root">
+          <aside className="sidebar">
+            <h2 className="sidebar-title">金融产品目录</h2>
+            {products.map((p) => {
+              const isActive = p.id === selectedProductId;
+              return (
+                <button
+                  key={p.id}
+                  className={
+                    "sidebar-item" + (isActive ? " active" : "")
+                  }
+                  onClick={() => handleSelectProduct(p.id)}
+                >
+                  <div className="sidebar-item-name">{p.name}</div>
+                  <div className="sidebar-item-desc">{p.description}</div>
+                </button>
+              );
+            })}
+          </aside>
+
+          <main className="middle">
+            <section className="dimension-bar">
+              <div className="dimension-title">知识维度</div>
+              <div className="dimension-tags">
+                {availableSectionTypes.map((t) => {
+                  const active = t === selectedSectionType;
+                  return (
+                    <button
+                      key={t}
+                      className={
+                        "dimension-tag" + (active ? " active" : "")
+                      }
+                      onClick={() => {
+                        setSelectedSectionType(t);
+                        setSelectedSectionId(null);
+                      }}
+                    >
+                      {SECTION_LABELS[t]}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="section-list">
+              <div className="section-list-title">本维度下的小节</div>
+              {!sectionsOfSelectedType.length && (
+                <div className="section-empty">
+                  当前产品暂无该维度的内容，可以稍后在数据中补充。
+                </div>
+              )}
+              <div className="section-tags">
+                {sectionsOfSelectedType.map((s) => {
+                  const active = activeSection && s.id === activeSection.id;
+                  return (
+                    <button
+                      key={s.id}
+                      className={
+                        "section-tag" + (active ? " active" : "")
+                      }
+                      onClick={() => setSelectedSectionId(s.id)}
+                    >
+                      {s.title}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          </main>
+
+          <section className="content">
+            {selectedProduct && activeSection ? (
+              <>
+                <div className="content-breadcrumb">
+                  {selectedProduct.category} ·{" "}
+                  {SECTION_LABELS[activeSection.type]}
+                </div>
+                <h1 className="content-title">
+                  {selectedProduct.name} - {activeSection.title}
+                </h1>
+                <div className="content-tags">
+                  {selectedProduct.tags.map((tag) => (
+                    <span key={tag} className="content-tag">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                {activeSection.summary && (
+                  <p className="content-summary">
+                    {activeSection.summary}
+                  </p>
+                )}
+                <pre className="content-body">
+{activeSection.content}
+                </pre>
+              </>
+            ) : (
+              <div className="content-placeholder">
+                请选择左侧产品和中间维度查看详细内容。
+              </div>
+            )}
+          </section>
+        </div>
+      );
     }
 
-    function showAnswer() {
-      const productId = productSelect.value;
-      const questionId = questionSelect.value;
-
-      if (!productId || !qaData[productId]) {
-        answerTitle.textContent = "请先在左侧选择产品";
-        answerBody.textContent = "可以先让用户把问题讲清楚 例如\n想了解收益 赎回 还是风险\n再对照左侧选项去选择对应产品.\n\n选好之后 再点击获取答案.";
-        answerExtra.textContent = "小提示 你也可以把这段话术当草稿 在回复前根据用户情况删减一两句 会更自然.";
-        return;
-      }
-      const product = qaData[productId];
-      const question = product.questions.find(q => q.id === questionId);
-
-      if (!question) {
-        answerTitle.textContent = product.name;
-        answerBody.textContent = "还没有选择具体问题 先在第二步下拉框里选一个.\n\n如果用户的问题比较特别 可以先选一个最接近的答案 再自己补充两三句说明.";
-        answerExtra.textContent = "建议习惯性先回答核心逻辑 再补一句风险提示 最后告诉用户去哪看详细规则 路径可以放在末尾.";
-        return;
-      }
-
-      answerTitle.textContent = product.name + " · " + question.q;
-      answerBody.textContent = question.a;
-      answerExtra.textContent =
-        "这段话可以直接复制到聊天窗口 根据用户等级和情绪做轻微调整即可.\n遇到非常专业的用户 可以补充 参考年化 计息时间 和产品帮助中心链接 做更深入解释.";
-    }
-
-    productSelect.addEventListener("change", () => {
-      refreshQuestions();
-      showAnswer();
-    });
-    questionSelect.addEventListener("change", showAnswer);
-    getAnswerBtn.addEventListener("click", showAnswer);
-
-    // 初始化
-    refreshQuestions();
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<FinancialRulesApp />);
   </script>
 </body>
 </html>
