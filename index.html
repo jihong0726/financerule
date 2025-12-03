@@ -175,441 +175,563 @@
 <body>
   <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useMemo } = React;
+<script type="text/babel">
+  const { useState, useMemo } = React;
 
-    const SECTION_LABELS = {
-      overview: "产品定位与定义",
-      mechanism: "运作机制",
-      yield: "收益结构",
-      interest: "计息规则",
-      redeem: "赎回规则",
-      risk: "风险披露",
-      scenario: "典型场景",
-      formula: "公式与示例",
-      faq: "常见问题"
+  const SECTION_LABELS = {
+    overview: "产品定位与定义",
+    mechanism: "运作机制",
+    yield: "收益结构",
+    interest: "计息规则",
+    redeem: "赎回规则",
+    risk: "风险披露",
+    scenario: "典型场景",
+    formula: "公式与示例",
+    faq: "常见问题"
+  };
+
+  // 模式：知识模式 / 话术模式
+  const MODE_LABELS = {
+    knowledge: "规则说明",
+    talk: "客服话术"
+  };
+
+  // 数据结构：在每个 section 上多了一个 talk 字段，用来放可以直接复制的话术
+  const products = [
+    {
+      id: "simple_earn_flex",
+      name: "简单赚币（活期）",
+      category: "赚币产品",
+      description:
+        "把用户的闲置资金集中到出借资金池，平台撮合给有借币需求的用户，用借币利息为出借人创造收益。",
+      tags: ["低风险理财", "按小时计息", "可随时赎回", "风险准备金 15%"],
+      sections: [
+        {
+          id: "simple_earn_flex_overview",
+          type: "overview",
+          title: "产品定位与适用人群",
+          content: [
+            "简单赚币（活期）是平台的基础型借贷撮合类理财产品。",
+            "",
+            "核心定位：",
+            "1. 帮助用户把闲置币种出借给有借币需求的交易者，赚取借币利息；",
+            "2. 在不需要用户主动选对手方、风控模型的前提下，由平台统一撮合与风险管理；",
+            "3. 风险等级低于主动交易，高于单纯持币不动。",
+            "",
+            "适用人群：",
+            "- 有中短期闲置资金，希望获取额外收益；",
+            "- 对交易不熟悉，但愿意承担一定市场与对手方风险；",
+            "- 不追求精确择时，只希望闲钱别躺着。"
+          ].join("\\n"),
+          talk: [
+            "简单赚币可以理解成把你的闲置币借给有需要的人，用他们付的利息来给你发收益。",
+            "平台这边会统一做撮合和风控，你不用自己挑对手，只要有借币需求，你的资金就会参与赚利息。",
+            "整体属于偏稳健的理财，比自己做合约要稳，但也不是绝对保本。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_mechanism",
+          type: "mechanism",
+          title: "运作机制与资金流向",
+          content: [
+            "资金来源：",
+            "- 用户在简单赚币页面选择币种与金额，提交出借委托；",
+            "- 资金从资金账户或交易账户划入出借池。",
+            "",
+            "资金流向：",
+            "- 平台将出借池资金按需撮合给有借币需求的用户，包括合约和杠杆场景；",
+            "- 借币用户按照借币年化利率支付利息；",
+            "- 平台从利息中提取固定比例作为风险准备金，其余按比例分配给出借人。",
+            "",
+            "风险准备金机制：",
+            "- 平台会从借币利息中提取约 15% 作为风险准备金，用于覆盖极端行情的潜在损失；",
+            "- 出借用户实际到手为借币利息 × 85% 左右。"
+          ].join("\\n"),
+          talk: [
+            "流程上是这样的：你的币会先进入简单赚币资金池，然后平台会把这部分资金借给有需求的用户，比如做杠杆或合约的用户。",
+            "借币的人按市场利率付利息，平台从中留出一部分做风控准备金，剩下的再按比例发给所有出借的用户。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_yield",
+          type: "yield",
+          title: "收益结构与年化含义",
+          content: [
+            "收益来源：",
+            "- 纯粹来自借币用户支付的利息，不包含做市、衍生品等额外风险敞口；",
+            "- 不同币种的借币需求不同，导致年化差异较大。",
+            "",
+            "年化收益展示：",
+            "- 页面展示的参考年化属于滚动历史数据或当前时刻的折算值；",
+            "- 不代表承诺收益，未来实际收益可能高于或低于参考值；",
+            "- 对于稳定币出借，平台会将所有合格出借订单聚合，按统一年化进行收益分配。",
+            "",
+            "收益拆分：",
+            "- 用户看到的到手收益 = 借币利息 × (1 - 风险准备金比例)；",
+            "- 风险准备金比例目前约为 15%，实际以产品规则为准。"
+          ].join("\\n"),
+          talk: [
+            "页面上看到的年化是一个参考值，主要是根据最近一段时间的借币利率折算出来的，并不是锁死不变的收益。",
+            "真实到手的收益是借币利息扣除了大约 15% 的风险准备金之后的部分，所以你看到的到账会比借币利率略低一点。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_interest",
+          type: "interest",
+          title: "计息规则与边界条件",
+          content: [
+            "计息起点：",
+            "- 只有当资金被成功出借，状态为赚币中后，才开始计息；",
+            "- 待出借状态不计息。",
+            "",
+            "计息方式：",
+            "- 以小时为单位进行收益计算；",
+            "- 每个计息小时，系统会截取该小时内的出借余额与对应年化。",
+            "",
+            "通用计息公式：",
+            "每小时收益 = 出借余额 × 实际年化 / 365 / 24 × (1 - 风险准备金比例)。",
+            "",
+            "计息终止：",
+            "- 用户发起赎回申请并进入赎回中状态后，通常不再产生新收益；",
+            "- 实际到账时间受资金池流动性影响，在极端行情下可能略有延迟。"
+          ].join("\\n"),
+          talk: [
+            "简单赚币是按小时来算利息的，只要你的资金在当个小时是出借成功状态，就会参与这一小时的收益计算。",
+            "如果订单显示是待出借或者赎回中，那这一段时间是不会继续计息的。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_redeem",
+          type: "redeem",
+          title: "赎回规则与流动性约束",
+          content: [
+            "正常赎回：",
+            "- 绝大多数时间，用户可以随时提交赎回申请；",
+            "- 资金会在短时间内回到账户，具体时效视币种与资金池情况而定。",
+            "",
+            "流动性约束：",
+            "- 当某一币种的出借资金大部分已经被借出，而借币方尚未归还时，赎回可能受到限制；",
+            "- 平台可能采取限额赎回或分批赎回等措施，以保障总体资金安全与可持续性。",
+            "",
+            "极端情形：",
+            "- 极端行情下，如大量借币用户同时爆仓、资金池出现阶段性缺口，赎回时效可能明显延长；",
+            "- 一般会通过公告、帮助中心或弹窗提示等方式说明。"
+          ].join("\\n"),
+          talk: [
+            "按规则简单赚币是随时可以申请赎回的，一般都会很快回到账。",
+            "如果遇到极端行情，比方说资金池里绝大部分资金都在外面被借走了，系统可能会做限额或分批赎回，这种情况下到账时间会相对久一些。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_risk",
+          type: "risk",
+          title: "风险披露与适当性提示",
+          content: [
+            "对手方风险：",
+            "- 借币用户在极端行情下可能出现保证金不足、清算不及时等情况；",
+            "- 风险准备金无法完全覆盖时，极端情况下可能对出借本金产生影响。",
+            "",
+            "流动性风险：",
+            "- 当借币需求极高时，资金高度利用，赎回速度可能下降；",
+            "- 当借币需求不足时，出借资金可能长时间处于待出借状态，收益降低。",
+            "",
+            "市场利率风险：",
+            "- 借币年化受市场供需影响，可能快速上升或下降；",
+            "- 历史年化不代表未来表现。",
+            "",
+            "使用建议：",
+            "- 不建议将全部资产集中在单一币种或单一产品；",
+            "- 对风险极度厌恶、完全不接受本金波动的用户，应充分了解上述风险后再决定是否参与。"
+          ].join("\\n"),
+          talk: [
+            "简单赚币属于偏稳健类产品，但不是完全无风险的。",
+            "极端行情下如果借币方保证金不足，且准备金也不够兜底，理论上会有本金受损的风险，所以不建议把全部资产都压在一个产品里。",
+            "如果你是完全不能接受本金有任何波动的，那更建议你仔细评估之后再决定要不要参与。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_scenario",
+          type: "scenario",
+          title: "典型用户问题与专业解读",
+          content: [
+            "场景一：收益突然为零",
+            "- 检查订单状态是否为待出借或赎回中；",
+            "- 如果是待出借，说明阶段性借币需求不足，资金尚未再次被撮合；",
+            "- 如果是赎回中，则处于等待资金回到账户的阶段，不再计息。",
+            "",
+            "场景二：设置了较低年化仍然长时间借不出去",
+            "- 实际是否出借取决于整体资金池供需，而非单个用户设置的下限；",
+            "- 当出借资金远大于借币需求时，即便设置很低的最低年化，也可能需要排队。",
+          ].join("\\n"),
+          talk: [
+            "如果你看到收益突然变成 0，第一步可以先看下订单状态。",
+            "如果显示待出借，说明这段时间借币的人比较少，你的资金还在排队，没有真实借出去；",
+            "如果是赎回中，就代表已经停止计息，系统在处理资金回到账户的过程。",
+            "",
+            "另外，即使你把最低年化设得很低，如果整体出借的人远多于借币的人，也会出现排队的情况，这个不是系统坏掉，而是市场供需导致的。"
+          ].join("\\n")
+        },
+        {
+          id: "simple_earn_flex_formula",
+          type: "formula",
+          title: "收益计算示例（带入实际数字）",
+          content: [
+            "示例参数：",
+            "- 出借金额：5,000 USDT；",
+            "- 市场借币年化：3.8%；",
+            "- 风险准备金比例：15%；",
+            "- 当日有 20 小时处于赚币中状态，剩余时间为待出借。",
+            "",
+            "每小时理论收益：",
+            "每小时收益 = 5,000 × 3.8% / 365 / 24 × 0.85 ≈ 0.0202 USDT。",
+            "",
+            "当日实际收益：",
+            "当日收益 ≈ 0.0202 × 20 ≈ 0.404 USDT。",
+            "",
+            "关键观察点：",
+            "- 有效计息小时数是决定实际收益的关键；",
+            "- 借币需求充足时，出借资金空仓时间少，总收益更接近理论值；",
+            "- 借币需求不足时，有效计息小时数减少，总收益会明显下降。"
+          ].join("\\n"),
+          talk: [
+            "举个例子，假设你出借 5000U，当时的借币年化是 3.8%，按照公式折算下来，如果一天里面有 20 个小时是在赚币中，大概一天能拿到 0.4U 左右。",
+            "真正影响你收益的，一个是年化利率本身，另一个就是在赚币中的有效小时数，所以有时候年化看起来差不多，但是如果中间有很多时间在排队待出借，实际收益就会低不少。"
+          ].join("\\n")
+        }
+      ]
+    },
+
+    {
+      id: "simple_earn_fixed",
+      name: "简单赚币（定期）",
+      category: "赚币产品",
+      description:
+        "目前主要为 USDT 90 天期，采用固定年化与锁定期模式，匹配借贷需求后开始计息。",
+      tags: ["USDT 90 天", "固定年化", "锁定期"],
+      sections: [
+        {
+          id: "simple_earn_fixed_overview",
+          type: "overview",
+          title: "产品定位与与活期的差异",
+          content:
+            "简单赚币（定期）以锁定期限换取更稳定的参考年化。与活期相比，资金流动性更差，但收益可预期性更好，适合中短期内不急用该笔资金的用户。",
+          talk:
+            "定期可以理解成用 90 天的锁定换一个相对更稳定的利率，中途基本不能动这笔钱，所以更适合你短期内不会用到的资金。"
+        },
+        {
+          id: "simple_earn_fixed_risk",
+          type: "risk",
+          title: "锁定与提前赎回风险提示",
+          content:
+            "锁定期内原则上不支持赎回，仅在资金仍未出借的阶段可以取消。匹配成功后，需承担锁定期内的市场利率变化与借款方相关风险。",
+          talk:
+            "定期一旦真正出借成功，就相当于锁定到期，中途不能随意赎回，所以在申购前一定要确认这笔资金在 90 天内用不到。"
+        }
+      ]
+    },
+
+    {
+      id: "dual_invest",
+      name: "双币赢（高卖 / 低买）",
+      category: "结构化产品",
+      description:
+        "将挂单买卖和收益增强组合在一起的结构化产品，通过设定目标价与期限，在到期时根据标的价格决定结算币种与收益。",
+      tags: ["结构化", "高卖策略", "低买策略", "到期结算"],
+      sections: [
+        {
+          id: "dual_invest_overview",
+          type: "overview",
+          title: "产品定位与适用策略",
+          content:
+            "双币赢适合本来就想在某个价位买入或卖出的用户，通过结构化方式，在等待成交的同时额外获得利息收益，而不是单纯挂限价单。",
+          talk:
+            "双币赢适合那种你本来就想在某个价格买入或者卖出的情况，相当于你挂单的同时，可以收一笔额外的利息。到期要么价格没到，你拿利息回去，要么价格到了，帮你在目标价附近成交。"
+        },
+        {
+          id: "dual_invest_mechanism",
+          type: "mechanism",
+          title: "高卖 / 低买的结算逻辑",
+          content:
+            "高卖：用标的币申购，到期价格大于等于目标价则按目标价卖出换成计价币，否则继续持有标的币并获得收益。\\n低买：用计价币申购，到期价格小于等于目标价则按目标价买入标的币，否则继续持有计价币并获得收益。",
+          talk:
+            "高卖就是用币申购，如果到期价高于你设的目标价，那系统会按目标价帮你把币卖掉，拿回的是 USDT 加利息；如果没到，就继续拿币加利息。低买刚好反过来，用 U 申购，到期跌到你设的价位附近，就用你设的价格帮你买币，同时有一部分收益。"
+        },
+        {
+          id: "dual_invest_risk",
+          type: "risk",
+          title: "价格偏离风险与机会成本",
+          content:
+            "主要风险在于到期时标的价格与目标价的偏离：高卖后价格继续大涨，可能错失后续涨幅；低买后价格继续下跌，买到的币会有浮动亏损。因此更适合对目标价有明确预期、且接受机会成本的用户。",
+          talk:
+            "双币赢的风险不在于系统是不是安全，而在于到期时价格在什么位置。比如高卖被卖掉之后，如果币价后面继续大涨，你会有踏空的机会成本；低买买到之后，如果价格继续往下走，这部分仓位就会有浮亏。"
+        }
+      ]
+    },
+
+    {
+      id: "lending",
+      name: "活期借币",
+      category: "借币与杠杆",
+      description:
+        "以质押物为基础，按小时计息灵活借入目标币种，可用于杠杆交易、合约交易或短期资金需求。",
+      tags: ["按小时计息", "可随时归还", "支持质押物还款"],
+      sections: [
+        {
+          id: "lending_overview",
+          type: "overview",
+          title: "借币产品整体介绍",
+          content:
+            "活期借币允许用户在不卖出现有资产的前提下，通过质押其他币种换取流动性，按小时计息，无固定到期日，可随时归还。",
+          talk:
+            "活期借币可以让你在不卖掉现有币的情况下，抵押一部分资产去借出想用的币，按小时计息，用完随时可以还。"
+        },
+        {
+          id: "lending_interest",
+          type: "interest",
+          title: "复利计息与利率来源",
+          content:
+            "采用小时复利计息模式：每小时利息会并入本金，下一小时以新的余额为基数计息。利率由市场供需、风险水平、币种特性等因素决定。",
+          talk:
+            "借币利息是按小时滚动计算的，每个小时的利息都会加回到借款里，下一小时再一起计息。利率高低会根据市场借币的供需情况实时变化。"
+        },
+        {
+          id: "lending_risk",
+          type: "risk",
+          title: "质押品波动与强平风险",
+          content:
+            "质押物价值若因市场波动大幅下降，可能触及保证金维护比例，触发强平或部分资产被动平仓。用户应持续关注质押率与风险提示。",
+          talk:
+            "借币的时候要特别注意质押物的价格波动，如果质押的币跌得太多，保证金不足，就有可能触发强平，把你的仓位被动平掉，所以借币前建议先预留一定安全空间。"
+        }
+      ]
+    }
+  ];
+
+  function FinancialRulesApp() {
+    const [selectedProductId, setSelectedProductId] = useState(
+      products[0] ? products[0].id : ""
+    );
+    const [selectedSectionType, setSelectedSectionType] = useState("overview");
+    const [selectedSectionId, setSelectedSectionId] = useState(null);
+    const [mode, setMode] = useState("knowledge"); // knowledge or talk
+
+    const selectedProduct = useMemo(
+      () => products.find((p) => p.id === selectedProductId),
+      [selectedProductId]
+    );
+
+    const availableSectionTypes = useMemo(() => {
+      if (!selectedProduct) return [];
+      const set = new Set();
+      selectedProduct.sections.forEach((s) => set.add(s.type));
+      return Array.from(set);
+    }, [selectedProduct]);
+
+    const sectionsOfSelectedType = useMemo(() => {
+      if (!selectedProduct) return [];
+      return selectedProduct.sections.filter(
+        (s) => s.type === selectedSectionType
+      );
+    }, [selectedProduct, selectedSectionType]);
+
+    const activeSection = useMemo(() => {
+      if (!sectionsOfSelectedType.length) return null;
+      if (selectedSectionId) {
+        const found = sectionsOfSelectedType.find(
+          (s) => s.id === selectedSectionId
+        );
+        if (found) return found;
+      }
+      return sectionsOfSelectedType[0];
+    }, [sectionsOfSelectedType, selectedSectionId]);
+
+    const handleSelectProduct = (id) => {
+      setSelectedProductId(id);
+      const prod = products.find((p) => p.id === id);
+      if (prod && prod.sections.length > 0) {
+        setSelectedSectionType(prod.sections[0].type);
+      } else {
+        setSelectedSectionType("overview");
+      }
+      setSelectedSectionId(null);
     };
 
-    const products = [
-      {
-        id: "simple_earn_flex",
-        name: "简单赚币（活期）",
-        category: "赚币产品",
-        description:
-          "把用户的闲置资金集中到出借资金池，平台撮合给有借币需求的用户，用借币利息为出借人创造收益。",
-        tags: ["低风险理财", "按小时计息", "可随时赎回", "风险准备金 15%"],
-        sections: [
-          {
-            id: "simple_earn_flex_overview",
-            type: "overview",
-            title: "产品定位与适用人群",
-            content: [
-              "简单赚币（活期）是平台的基础型“借贷撮合类”理财产品。",
-              "",
-              "核心定位：",
-              "1. 帮助用户把闲置币种出借给有借币需求的交易者，赚取借币利息；",
-              "2. 在不需要用户主动选对手方、风控模型的前提下，由平台统一撮合与风险管理；",
-              "3. 风险等级低于主动交易，高于“单纯持币不动”。",
-              "",
-              "适用人群：",
-              "- 有中短期闲置资金，希望获取额外收益；",
-              "- 对交易不熟悉，但愿意承担一定市场与对手方风险；",
-              "- 不追求精确择时，只希望“闲钱别躺着”。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_mechanism",
-            type: "mechanism",
-            title: "运作机制与资金流向",
-            content: [
-              "1. 资金来源：",
-              "   - 用户在简单赚币页面选择币种与金额，提交“出借委托”；",
-              "   - 资金从资金账户或交易账户划入出借池。",
-              "",
-              "2. 资金流向：",
-              "   - 平台将出借池资金按需撮合给有借币需求的用户（包括合约交易、杠杆交易等场景）；",
-              "   - 借币用户按照“借币年化利率”支付利息；",
-              "   - 平台从利息中提取固定比例作为风险准备金，其余按比例分配给出借人。",
-              "",
-              "3. 风险准备金机制：",
-              "   - 平台会从借币利息中提取约 15% 作为风险准备金；",
-              "   - 用于覆盖极端行情下，借币方保证金不足时的潜在损失；",
-              "   - 出借用户实际到手为“借币利息 × 85% 左右”。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_yield",
-            type: "yield",
-            title: "收益结构与年化含义",
-            content: [
-              "1. 收益来源：",
-              "   - 纯粹来自借币用户支付的利息，不包含做市、衍生品等额外风险敞口；",
-              "   - 不同币种的借币需求不同，导致年化差异较大。",
-              "",
-              "2. 年化收益展示：",
-              "   - 页面展示的“参考年化”属于滚动历史数据或当前时刻的折算值；",
-              "   - 不是承诺收益，未来实际收益可能高于或低于参考值；",
-              "   - 对于稳定币出借，平台会将所有合格出借订单聚合，按统一年化进行收益分配。",
-              "",
-              "3. 收益拆分：",
-              "   - 用户看到的到手收益 = 借币利息 × (1 - 风险准备金比例)；",
-              "   - 风险准备金比例目前约为 15%，实际以产品规则为准。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_interest",
-            type: "interest",
-            title: "计息规则与边界条件",
-            content: [
-              "1. 计息起点：",
-              "   - 只有当资金被成功出借（状态为“赚币中”）后，才开始计息；",
-              "   - “待出借”状态不计息。",
-              "",
-              "2. 计息方式：",
-              "   - 以小时为单位进行收益计算；",
-              "   - 每个计息小时，系统会截取该小时内的出借余额与对应年化。",
-              "",
-              "3. 通用计息公式（示意）：",
-              "   - 每小时收益 = 出借余额 × 实际年化 / 365 / 24 × (1 - 风险准备金比例)；",
-              "   - 其中风险准备金比例目前约为 15%。",
-              "",
-              "4. 计息终止：",
-              "   - 用户发起赎回申请并进入“赎回中”状态后，通常不再产生新收益；",
-              "   - 实际到账时间受资金池流动性影响，在极端行情下可能略有延迟。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_redeem",
-            type: "redeem",
-            title: "赎回规则与流动性约束",
-            content: [
-              "1. 正常赎回：",
-              "   - 绝大多数时间，用户可以随时提交赎回申请；",
-              "   - 资金会在短时间内回到账户，具体时效视币种与资金池情况而定。",
-              "",
-              "2. 流动性约束：",
-              "   - 当某一币种的出借资金大部分已经被借出，而借币方尚未归还时，赎回可能受到限制；",
-              "   - 平台可能采取“限额赎回”、“分批赎回”等措施，以保障总体资金安全与可持续性。",
-              "",
-              "3. 极端情形：",
-              "   - 极端行情下，如大量借币用户同时爆仓、资金池出现阶段性缺口，赎回时效可能明显延长；",
-              "   - 此类情况通常会通过公告、帮助中心、弹窗提示等方式提前或同步说明。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_risk",
-            type: "risk",
-            title: "风险披露与适当性提示",
-            content: [
-              "简单赚币（活期）虽为相对稳健产品，但仍然存在以下风险：",
-              "",
-              "1. 对手方风险：",
-              "   - 借币用户在极端行情下可能出现保证金不足、清算不及时等情况；",
-              "   - 风险准备金无法完全覆盖时，极端情况下可能对出借本金产生影响。",
-              "",
-              "2. 流动性风险：",
-              "   - 市场某一币种借币需求突然大幅上升时，资金会高度“闲置利用”，导致赎回速度下降；",
-              "   - 反之，借币需求不足时，出借资金可能长时间处于“待出借”状态，收益趋近于 0。",
-              "",
-              "3. 市场利率风险：",
-              "   - 借币年化受市场供需影响，可能快速上升或下降；",
-              "   - 历史年化不代表未来表现。",
-              "",
-              "4. 使用建议：",
-              "   - 不建议将全部资产集中在单一币种或单一产品；",
-              "   - 对风险极度厌恶、完全不接受本金波动的用户，应充分了解上述风险后再决定是否参与。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_scenario",
-            type: "scenario",
-            title: "典型用户问题与专业解读",
-            content: [
-              "场景 1：用户反馈“收益突然变 0”",
-              "",
-              "专业解读：",
-              "- 检查资金是否仍处于“赚币中”状态；",
-              "- 若状态为“待出借”，说明近期借币需求不足，资金尚未再次被撮合；",
-              "- 若状态为“赎回中”，则已经不再产生收益，只等待资金回到账户。",
-              "",
-              "场景 2：用户质疑“设置了 1% 年化却长时间借不出去”",
-              "",
-              "专业解读：",
-              "- 实际是否出借，取决于市场借币需求与资金池整体供需，而非单个用户设置的下限；",
-              "- 即便设置的最低年化较低，当总体出借资金远大于借币需求时，也会出现排队与长时间待出借的情况；",
-              "- 可以引导用户结合历史借币数据、市场行情综合判断，不宜单纯以“设了 1% 就一定秒出借”来理解。"
-            ].join("\\n")
-          },
-          {
-            id: "simple_earn_flex_formula",
-            type: "formula",
-            title: "收益计算示例（带入实际数字）",
-            content: [
-              "【示例参数】",
-              "- 出借金额：5,000 USDT；",
-              "- 市场借币年化：3.8%；",
-              "- 风险准备金比例：15%；",
-              "- 当日有 20 小时处于“赚币中”状态，剩余时间为“待出借”。",
-              "",
-              "1. 每小时理论收益：",
-              "   每小时收益 = 5,000 × 3.8% / 365 / 24 × 0.85",
-              "                 ≈ 0.0202 USDT/小时。",
-              "",
-              "2. 当日实际收益：",
-              "   当日收益 ≈ 0.0202 × 20 ≈ 0.404 USDT。",
-              "",
-              "3. 关键观察点：",
-              "- 有效计息小时数是决定实际收益的关键；",
-              "- 市场越活跃、借币需求越足，出借资金“空仓时间”越少，总收益越接近“年化 × 本金”的理论值。"
-            ].join("\\n")
-          }
-        ]
-      },
-      {
-        id: "simple_earn_fixed",
-        name: "简单赚币（定期）",
-        category: "赚币产品",
-        description:
-          "目前主要为 USDT 90 天期，采用固定年化与锁定期模式，匹配借贷需求后开始计息。",
-        tags: ["USDT 90 天", "固定年化", "不可随意赎回"],
-        sections: [
-          {
-            id: "simple_earn_fixed_overview",
-            type: "overview",
-            title: "产品定位与与活期的差异",
-            content:
-              "简单赚币（定期）以锁定期限换取更稳定的参考年化。与活期相比，资金流动性更差，但收益可预期性更好，适合对流动性要求不高的用户。"
-          },
-          {
-            id: "simple_earn_fixed_risk",
-            type: "risk",
-            title: "锁定与提前赎回风险提示",
-            content:
-              "锁定期内原则上不支持赎回，仅在资金仍未出借的阶段可以取消。匹配成功后，需承担锁定期内的市场利率变化与借款方相关风险。"
-          }
-        ]
-      },
-      {
-        id: "dual_invest",
-        name: "双币赢（高卖 / 低买）",
-        category: "结构化产品",
-        description:
-          "将“挂单买卖 + 收益增强”组合在一起的结构化产品，通过设定目标价与期限，在到期时根据标的价格决定结算币种与收益。",
-        tags: ["结构化", "高卖策略", "低买策略", "到期结算"],
-        sections: [
-          {
-            id: "dual_invest_overview",
-            type: "overview",
-            title: "产品定位与适用策略",
-            content:
-              "双币赢适合“本来就想在某个价位买入或卖出”的用户，通过结构化设计，在等待成交的过程中额外获得收益，而不是单纯挂限价单。"
-          },
-          {
-            id: "dual_invest_mechanism",
-            type: "mechanism",
-            title: "高卖 / 低买的结算逻辑",
-            content:
-              "高卖：用标的币申购，到期价格≥目标价则按目标价卖出换成计价币，否则继续持有标的币并获得收益。\\n低买：用计价币申购，到期价格≤目标价则按目标价买入标的币，否则继续持有计价币并获得收益。"
-          },
-          {
-            id: "dual_invest_risk",
-            type: "risk",
-            title: "价格偏离风险与机会成本",
-            content:
-              "主要风险不在于“产品是否安全”，而在于到期时标的价格是否显著偏离目标价。如果高卖后价格继续大涨，或低买后价格继续大跌，都会产生明显的机会成本或浮动亏损。"
-          }
-        ]
-      },
-      {
-        id: "lending",
-        name: "活期借币",
-        category: "借币与杠杆",
-        description:
-          "以质押物为基础，按小时计息灵活借入目标币种，可用于杠杆交易、合约交易或短期资金需求。",
-        tags: ["按小时计息", "可随时归还", "支持质押物还款"],
-        sections: [
-          {
-            id: "lending_overview",
-            type: "overview",
-            title: "借币产品整体介绍",
-            content:
-              "活期借币允许用户在不卖出现有资产的前提下，通过质押其他币种换取流动性，按小时计息，无固定到期日，可随时归还。"
-          },
-          {
-            id: "lending_interest",
-            type: "interest",
-            title: "复利计息与利率来源",
-            content:
-              "采用小时复利计息模式：每小时利息会并入本金，下一小时以新的余额为基数计息。利率由市场供需、风险水平、币种特性等因素决定。"
-          },
-          {
-            id: "lending_risk",
-            type: "risk",
-            title: "质押品波动与强平风险",
-            content:
-              "质押物价值若因市场波动大幅下降，可能触及保证金维护比例，触发强平或部分资产被动平仓。用户应持续关注质押率与风险提示。"
-          }
-        ]
+    const handleCopy = () => {
+      if (!activeSection) return;
+      const text =
+        mode === "knowledge"
+          ? activeSection.content
+          : activeSection.talk || activeSection.content;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+      } else {
+        // 兼容性兜底：创建临时 textarea
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand("copy");
+        } catch (e) {}
+        document.body.removeChild(textarea);
       }
-    ];
+    };
 
-    function FinancialRulesApp() {
-      const [selectedProductId, setSelectedProductId] = useState(
-        products[0] ? products[0].id : ""
-      );
-      const [selectedSectionType, setSelectedSectionType] = useState("overview");
-      const [selectedSectionId, setSelectedSectionId] = useState(null);
+    return (
+      <div className="app-root">
+        <aside className="sidebar">
+          <h2 className="sidebar-title">金融产品目录</h2>
+          {products.map((p) => {
+            const isActive = p.id === selectedProductId;
+            return (
+              <button
+                key={p.id}
+                className={"sidebar-item" + (isActive ? " active" : "")}
+                onClick={() => handleSelectProduct(p.id)}
+              >
+                <div className="sidebar-item-name">{p.name}</div>
+                <div className="sidebar-item-desc">{p.description}</div>
+              </button>
+            );
+          })}
+        </aside>
 
-      const selectedProduct = useMemo(
-        () => products.find((p) => p.id === selectedProductId),
-        [selectedProductId]
-      );
-
-      const availableSectionTypes = useMemo(() => {
-        if (!selectedProduct) return [];
-        const set = new Set();
-        selectedProduct.sections.forEach((s) => set.add(s.type));
-        return Array.from(set);
-      }, [selectedProduct]);
-
-      const sectionsOfSelectedType = useMemo(() => {
-        if (!selectedProduct) return [];
-        return selectedProduct.sections.filter(
-          (s) => s.type === selectedSectionType
-        );
-      }, [selectedProduct, selectedSectionType]);
-
-      const activeSection = useMemo(() => {
-        if (!sectionsOfSelectedType.length) return null;
-        if (selectedSectionId) {
-          const found = sectionsOfSelectedType.find(
-            (s) => s.id === selectedSectionId
-          );
-          if (found) return found;
-        }
-        return sectionsOfSelectedType[0];
-      }, [sectionsOfSelectedType, selectedSectionId]);
-
-      const handleSelectProduct = (id) => {
-        setSelectedProductId(id);
-        const prod = products.find((p) => p.id === id);
-        if (prod && prod.sections.length > 0) {
-          setSelectedSectionType(prod.sections[0].type);
-        } else {
-          setSelectedSectionType("overview");
-        }
-        setSelectedSectionId(null);
-      };
-
-      return (
-        <div className="app-root">
-          <aside className="sidebar">
-            <h2 className="sidebar-title">金融产品目录</h2>
-            {products.map((p) => {
-              const isActive = p.id === selectedProductId;
-              return (
-                <button
-                  key={p.id}
-                  className={
-                    "sidebar-item" + (isActive ? " active" : "")
-                  }
-                  onClick={() => handleSelectProduct(p.id)}
-                >
-                  <div className="sidebar-item-name">{p.name}</div>
-                  <div className="sidebar-item-desc">{p.description}</div>
-                </button>
-              );
-            })}
-          </aside>
-
-          <main className="middle">
-            <section className="dimension-bar">
+        <main className="middle">
+          <section className="dimension-bar">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8
+              }}
+            >
               <div className="dimension-title">知识维度</div>
-              <div className="dimension-tags">
-                {availableSectionTypes.map((t) => {
-                  const active = t === selectedSectionType;
+              <div style={{ display: "flex", gap: 6 }}>
+                {["knowledge", "talk"].map((m) => {
+                  const active = mode === m;
                   return (
                     <button
-                      key={t}
-                      className={
-                        "dimension-tag" + (active ? " active" : "")
-                      }
-                      onClick={() => {
-                        setSelectedSectionType(t);
-                        setSelectedSectionId(null);
+                      key={m}
+                      onClick={() => setMode(m)}
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 999,
+                        border: "1px solid #374151",
+                        backgroundColor: active ? "#22c55e" : "transparent",
+                        color: active ? "#020617" : "#d1d5db",
+                        fontSize: 11,
+                        cursor: "pointer"
                       }}
                     >
-                      {SECTION_LABELS[t]}
+                      {MODE_LABELS[m]}
                     </button>
                   );
                 })}
               </div>
-            </section>
+            </div>
+            <div className="dimension-tags">
+              {availableSectionTypes.map((t) => {
+                const active = t === selectedSectionType;
+                return (
+                  <button
+                    key={t}
+                    className={"dimension-tag" + (active ? " active" : "")}
+                    onClick={() => {
+                      setSelectedSectionType(t);
+                      setSelectedSectionId(null);
+                    }}
+                  >
+                    {SECTION_LABELS[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-            <section className="section-list">
-              <div className="section-list-title">本维度下的小节</div>
-              {!sectionsOfSelectedType.length && (
-                <div className="section-empty">
-                  当前产品暂无该维度的内容，可以稍后在数据中补充。
-                </div>
-              )}
-              <div className="section-tags">
-                {sectionsOfSelectedType.map((s) => {
-                  const active = activeSection && s.id === activeSection.id;
-                  return (
-                    <button
-                      key={s.id}
-                      className={
-                        "section-tag" + (active ? " active" : "")
-                      }
-                      onClick={() => setSelectedSectionId(s.id)}
-                    >
-                      {s.title}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          </main>
-
-          <section className="content">
-            {selectedProduct && activeSection ? (
-              <>
-                <div className="content-breadcrumb">
-                  {selectedProduct.category} ·{" "}
-                  {SECTION_LABELS[activeSection.type]}
-                </div>
-                <h1 className="content-title">
-                  {selectedProduct.name} - {activeSection.title}
-                </h1>
-                <div className="content-tags">
-                  {selectedProduct.tags.map((tag) => (
-                    <span key={tag} className="content-tag">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                {activeSection.summary && (
-                  <p className="content-summary">
-                    {activeSection.summary}
-                  </p>
-                )}
-                <pre className="content-body">
-{activeSection.content}
-                </pre>
-              </>
-            ) : (
-              <div className="content-placeholder">
-                请选择左侧产品和中间维度查看详细内容。
+          <section className="section-list">
+            <div className="section-list-title">本维度下的小节</div>
+            {!sectionsOfSelectedType.length && (
+              <div className="section-empty">
+                当前产品暂无该维度的内容，可以稍后在数据中补充。
               </div>
             )}
+            <div className="section-tags">
+              {sectionsOfSelectedType.map((s) => {
+                const active = activeSection && s.id === activeSection.id;
+                return (
+                  <button
+                    key={s.id}
+                    className={"section-tag" + (active ? " active" : "")}
+                    onClick={() => setSelectedSectionId(s.id)}
+                  >
+                    {s.title}
+                  </button>
+                );
+              })}
+            </div>
           </section>
-        </div>
-      );
-    }
+        </main>
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<FinancialRulesApp />);
-  </script>
+        <section className="content">
+          {selectedProduct && activeSection ? (
+            <>
+              <div className="content-breadcrumb">
+                {selectedProduct.category} · {SECTION_LABELS[activeSection.type]} ·{" "}
+                {MODE_LABELS[mode]}
+              </div>
+              <h1 className="content-title">
+                {selectedProduct.name} - {activeSection.title}
+              </h1>
+              <div className="content-tags">
+                {selectedProduct.tags.map((tag) => (
+                  <span key={tag} className="content-tag">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginBottom: 8,
+                  gap: 8
+                }}
+              >
+                <button
+                  onClick={handleCopy}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: 8,
+                    border: "1px solid #374151",
+                    backgroundColor: "transparent",
+                    color: "#d1d5db",
+                    fontSize: 11,
+                    cursor: "pointer"
+                  }}
+                >
+                  复制当前内容
+                </button>
+              </div>
+              <pre className="content-body">
+{mode === "knowledge"
+  ? activeSection.content
+  : activeSection.talk || activeSection.content}
+              </pre>
+            </>
+          ) : (
+            <div className="content-placeholder">
+              请选择左侧产品和中间维度查看详细内容。
+            </div>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<FinancialRulesApp />);
+</script>
+
 </body>
 </html>
